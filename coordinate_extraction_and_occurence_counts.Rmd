@@ -1,0 +1,38 @@
+---
+title: "Unique_Coordinates_Occurences"
+output: html_document
+date: "2026-05-19"
+---
+
+
+
+## Code
+
+```{r code}
+
+library(tidyverse)
+
+# ebird txt insert
+file_path <- "ebd_US-CA-073_barswa5_200201_202112_smp_relMar-2026.txt"
+
+# read
+ebird_data_barnswallow <- read_tsv(file_path, show_col_types = FALSE)
+
+# count unique coordinate pairs
+unique_coordinates <- ebird_data_barnswallow %>%
+  filter(!is.na(LATITUDE), !is.na(LONGITUDE)) %>%
+  group_by(LATITUDE, LONGITUDE) %>%
+  summarise(
+    occurrence_count = n(),
+    locality = first(LOCALITY),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(occurrence_count), LATITUDE, LONGITUDE)
+
+# show them
+print(unique_coordinates)
+
+# Save output
+write_csv(unique_coordinates, "barn_swallow_unique_coordinate_pairs_with_counts.csv")
+```
+
