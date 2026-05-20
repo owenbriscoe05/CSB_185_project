@@ -1,0 +1,99 @@
+---
+title: "UAI"
+output: html_document
+date: "2026-05-20"
+---
+VIIRs tiff (dimensions 180W left border, 60W right border, 75N upper border, 0 lower border) transform pixel to coordinate and take coordinates/occurences within 100km of san diego for each species... 
+
+Each pixel already corresponds to a log scaled radiance (Eldridge et. al)...
+
+Develop CSV of species occurences per coordinate pair and corresponding radiance value
+
+
+```{r, setup}
+
+library(terra)
+library(tidyverse)
+
+# Load VIIRS TIFF
+viirs <- rast("the_VIIRS_NA_75N_00N_180W_60W.tif")
+# Set extent and CRS for your VIIRS tile
+ext(viirs) <- ext(-180, -60, 0, 75)
+crs(viirs) <- "EPSG:4326"
+
+# Function to extract VIIRS radiance for one species
+extract_viirs_for_species <- function(input_csv, output_csv) {
+  
+  # Read coordinate CSV and remove old radiance columns if present
+  species_coords <- read_csv(input_csv, show_col_types = FALSE) %>%
+    select(-any_of(c("radiance", "viirs_radiance")))
+  
+  # Convert coordinates to spatial points
+  species_points <- vect(
+    species_coords,
+    geom = c("LONGITUDE", "LATITUDE"),
+    crs = "EPSG:4326"
+  )
+  
+  # Extract radiance values from VIIRS raster
+  extracted_values <- terra::extract(viirs, species_points)
+  
+  # Add radiance column
+  species_coords_with_radiance <- species_coords %>%
+    mutate(
+      radiance = extracted_values[[2]]
+    )
+  
+  # Save output CSV
+  write_csv(species_coords_with_radiance, output_csv)
+  
+  # Return table so you can view it in R
+  return(species_coords_with_radiance)
+}
+```
+
+
+```{r barnswallow_viirs}
+barnswallow_viirs <- extract_viirs_for_species(
+  input_csv = "REAL_barnswallow_coordinates_within_100km_of_san_diego.csv",
+  output_csv = "REAL_barnswallow_coordinates_with_viirs_radiance.csv"
+)
+
+print(barnswallow_viirs)
+```
+
+```{r california_quail_viirs}
+california_quail_viirs <- extract_viirs_for_species(
+  input_csv = "~/Downloads/C&SBIO_185_PROJECT/REAL_california_quail_coordinates_within_100km_of_san_diego.csv",
+  output_csv = "REAL_california_quail_coordinates_with_viirs_radiance.csv"
+)
+
+print(california_quail_viirs)
+```
+
+```{r house_sparrow_viirs}
+house_sparrow_viirs <- extract_viirs_for_species(
+  input_csv = "~/Downloads/C&SBIO_185_PROJECT/REAL_housesparrow_coordinates_within_100km_of_san_diego.csv",
+  output_csv = "REAL_housesparrow_coordinates_with_viirs_radiance.csv"
+)
+
+print(house_sparrow_viirs)
+```
+
+```{r peregrine_falcon_viirs}
+peregrine_falcon_viirs <- extract_viirs_for_species(
+  input_csv = "~/Downloads/C&SBIO_185_PROJECT/REAL_peregrinefalcon_coordinates_within_100km_of_san_diego.csv",
+  output_csv = "REAL_peregrinefalcon_coordinates_with_viirs_radiance.csv"
+)
+
+print(peregrine_falcon_viirs)
+```
+
+```{r rock_pigeon_viirs}
+rock_pigeon_viirs <- extract_viirs_for_species(
+  input_csv = "~/Downloads/C&SBIO_185_PROJECT/REAL_rockpigeon_coordinates_within_100km_of_san_diego.csv",
+  output_csv = "REAL_rock_pigeon_coordinates_with_viirs_radiance.csv"
+)
+
+print(rock_pigeon_viirs)
+```

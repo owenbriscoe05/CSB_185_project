@@ -5,21 +5,18 @@ date: "2026-05-19"
 ---
 
 
-
-## Code
-
-```{r code}
+```{r barnswallow_code}
 
 library(tidyverse)
 
 # ebird txt insert
-file_path <- "ebd_US-CA-073_barswa5_200201_202112_smp_relMar-2026.txt"
+file_path <- "~/Downloads/C&SBIO_185_PROJECT/REAL_DATA_C&S_BIO_185_PROJECT/barnswallow_smp_rel.txt"
 
 # read
 ebird_data_barnswallow <- read_tsv(file_path, show_col_types = FALSE)
 
 # count unique coordinate pairs
-unique_coordinates <- ebird_data_barnswallow %>%
+barnswallow_unique_coordinates <- ebird_data_barnswallow %>%
   filter(!is.na(LATITUDE), !is.na(LONGITUDE)) %>%
   group_by(LATITUDE, LONGITUDE) %>%
   summarise(
@@ -30,9 +27,347 @@ unique_coordinates <- ebird_data_barnswallow %>%
   arrange(desc(occurrence_count), LATITUDE, LONGITUDE)
 
 # show them
-print(unique_coordinates)
+print(barnswallow_unique_coordinates)
 
-# Save output
-write_csv(unique_coordinates, "barn_swallow_unique_coordinate_pairs_with_counts.csv")
+# output
+write_csv(barnswallow_unique_coordinates, "REAL_barn_swallow_unique_coordinate_pairs_with_counts.csv")
+
+
+# San Diego city center coordinates
+sd_lat <- 32.7157
+sd_lon <- -117.1611
+
+# Haversine distance function
+haversine_km <- function(lat1, lon1, lat2, lon2) {
+  R <- 6371 # Earth radius in km
+  
+  lat1 <- lat1 * pi / 180
+  lon1 <- lon1 * pi / 180
+  lat2 <- lat2 * pi / 180
+  lon2 <- lon2 * pi / 180
+  
+  dlat <- lat2 - lat1
+  dlon <- lon2 - lon1
+  
+  a <- sin(dlat / 2)^2 +
+    cos(lat1) * cos(lat2) * sin(dlon / 2)^2
+  
+  c <- 2 * atan2(sqrt(a), sqrt(1 - a))
+  
+  distance <- R * c
+  return(distance)
+}
+
+# Add distance from San Diego to each coordinate pair
+barnswallow_unique_coordinates$distance_from_san_diego_km <- haversine_km(
+  sd_lat,
+  sd_lon,
+  barnswallow_unique_coordinates$LATITUDE,
+  barnswallow_unique_coordinates$LONGITUDE
+)
+
+# Filter to only coordinates within 100 km
+barnswallow_coordinates_within_100km <- barnswallow_unique_coordinates[
+  barnswallow_unique_coordinates$distance_from_san_diego_km <= 100,
+]
+
+# Sort from closest to farthest
+barnswallow_coordinates_within_100km <- barnswallow_coordinates_within_100km[
+  order(barnswallow_coordinates_within_100km$distance_from_san_diego_km),
+]
+
+# View result
+print(barnswallow_coordinates_within_100km)
+
+# Save as CSV
+write.csv(
+  barnswallow_coordinates_within_100km,
+  "REAL_barnswallow_coordinates_within_100km_of_san_diego.csv",
+  row.names = FALSE
+)
 ```
 
+```{r california_quail}
+file_path <- "~/Downloads/C&SBIO_185_PROJECT/REAL_DATA_C&S_BIO_185_PROJECT/californiaquail_smp_rel.txt"
+
+ebird_data_california_quail <- read_tsv(file_path, show_col_types = FALSE)
+
+
+california_quail_unique_coordinates <- ebird_data_california_quail %>%
+  filter(!is.na(LATITUDE), !is.na(LONGITUDE)) %>%
+  group_by(LATITUDE, LONGITUDE) %>%
+  summarise(
+    occurrence_count = n(),
+    locality = first(LOCALITY),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(occurrence_count), LATITUDE, LONGITUDE)
+
+
+print(california_quail_unique_coordinates)
+write_csv(california_quail_unique_coordinates, "REAL_california_quail_unique_coordinate_pairs_with_counts.csv")
+
+sd_lat <- 32.7157
+sd_lon <- -117.1611
+
+haversine_km <- function(lat1, lon1, lat2, lon2) {
+  R <- 6371 
+  
+  lat1 <- lat1 * pi / 180
+  lon1 <- lon1 * pi / 180
+  lat2 <- lat2 * pi / 180
+  lon2 <- lon2 * pi / 180
+  
+  dlat <- lat2 - lat1
+  dlon <- lon2 - lon1
+  
+  a <- sin(dlat / 2)^2 +
+    cos(lat1) * cos(lat2) * sin(dlon / 2)^2
+  
+  c <- 2 * atan2(sqrt(a), sqrt(1 - a))
+  
+  distance <- R * c
+  return(distance)
+}
+
+california_quail_unique_coordinates$distance_from_san_diego_km <- haversine_km(
+  sd_lat,
+  sd_lon,
+  california_quail_unique_coordinates$LATITUDE,
+  california_quail_unique_coordinates$LONGITUDE
+)
+
+# Filter to only coordinates within 100 km
+california_quail_coordinates_within_100km <- california_quail_unique_coordinates[
+  california_quail_unique_coordinates$distance_from_san_diego_km <= 100,
+]
+
+# Sort from closest to farthest
+california_quail_coordinates_within_100km <- california_quail_coordinates_within_100km[
+  order(california_quail_coordinates_within_100km$distance_from_san_diego_km),
+]
+
+# View result
+print(california_quail_coordinates_within_100km)
+
+# Save as CSV
+write.csv(
+  california_quail_coordinates_within_100km,
+  "REAL_california_quail_coordinates_within_100km_of_san_diego.csv",
+  row.names = FALSE
+)
+
+```
+
+```{r house sparrow}
+file_path <- "~/Downloads/C&SBIO_185_PROJECT/REAL_DATA_C&S_BIO_185_PROJECT/housesparrow_smp_rel.txt"
+
+ebird_data_housesparrow <- read_tsv(file_path, show_col_types = FALSE)
+
+
+housesparrow_unique_coordinates <- ebird_data_housesparrow %>%
+  filter(!is.na(LATITUDE), !is.na(LONGITUDE)) %>%
+  group_by(LATITUDE, LONGITUDE) %>%
+  summarise(
+    occurrence_count = n(),
+    locality = first(LOCALITY),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(occurrence_count), LATITUDE, LONGITUDE)
+
+
+print(housesparrow_unique_coordinates)
+write_csv(housesparrow_unique_coordinates, "REAL_housesparrow_unique_coordinate_pairs_with_counts.csv")
+
+sd_lat <- 32.7157
+sd_lon <- -117.1611
+
+haversine_km <- function(lat1, lon1, lat2, lon2) {
+  R <- 6371 
+  
+  lat1 <- lat1 * pi / 180
+  lon1 <- lon1 * pi / 180
+  lat2 <- lat2 * pi / 180
+  lon2 <- lon2 * pi / 180
+  
+  dlat <- lat2 - lat1
+  dlon <- lon2 - lon1
+  
+  a <- sin(dlat / 2)^2 +
+    cos(lat1) * cos(lat2) * sin(dlon / 2)^2
+  
+  c <- 2 * atan2(sqrt(a), sqrt(1 - a))
+  
+  distance <- R * c
+  return(distance)
+}
+
+housesparrow_unique_coordinates$distance_from_san_diego_km <- haversine_km(
+  sd_lat,
+  sd_lon,
+  housesparrow_unique_coordinates$LATITUDE,
+  housesparrow_unique_coordinates$LONGITUDE
+)
+
+# Filter to only coordinates within 100 km
+housesparrow_coordinates_within_100km <- housesparrow_unique_coordinates[
+  housesparrow_unique_coordinates$distance_from_san_diego_km <= 100,
+]
+
+# Sort from closest to farthest
+housesparrow_coordinates_within_100km <- housesparrow_coordinates_within_100km[
+  order(housesparrow_coordinates_within_100km$distance_from_san_diego_km),
+]
+
+# View result
+print(housesparrow_coordinates_within_100km)
+
+# Save as CSV
+write.csv(
+  housesparrow_coordinates_within_100km,
+  "REAL_housesparrow_coordinates_within_100km_of_san_diego.csv",
+  row.names = FALSE
+)
+```
+
+```{r peregrine falcon}
+file_path <- "~/Downloads/C&SBIO_185_PROJECT/REAL_DATA_C&S_BIO_185_PROJECT/peregrinefalcon_smp_rel.txt"
+
+ebird_data_peregrinefalcon <- read_tsv(file_path, show_col_types = FALSE)
+
+
+peregrinefalcon_unique_coordinates <- ebird_data_peregrinefalcon %>%
+  filter(!is.na(LATITUDE), !is.na(LONGITUDE)) %>%
+  group_by(LATITUDE, LONGITUDE) %>%
+  summarise(
+    occurrence_count = n(),
+    locality = first(LOCALITY),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(occurrence_count), LATITUDE, LONGITUDE)
+
+
+print(peregrinefalcon_unique_coordinates)
+write_csv(peregrinefalcon_unique_coordinates, "REAL_peregrinefalcon_unique_coordinate_pairs_with_counts.csv")
+
+sd_lat <- 32.7157
+sd_lon <- -117.1611
+
+haversine_km <- function(lat1, lon1, lat2, lon2) {
+  R <- 6371 
+  
+  lat1 <- lat1 * pi / 180
+  lon1 <- lon1 * pi / 180
+  lat2 <- lat2 * pi / 180
+  lon2 <- lon2 * pi / 180
+  
+  dlat <- lat2 - lat1
+  dlon <- lon2 - lon1
+  
+  a <- sin(dlat / 2)^2 +
+    cos(lat1) * cos(lat2) * sin(dlon / 2)^2
+  
+  c <- 2 * atan2(sqrt(a), sqrt(1 - a))
+  
+  distance <- R * c
+  return(distance)
+}
+
+peregrinefalcon_unique_coordinates$distance_from_san_diego_km <- haversine_km(
+  sd_lat,
+  sd_lon,
+  peregrinefalcon_unique_coordinates$LATITUDE,
+  peregrinefalcon_unique_coordinates$LONGITUDE
+)
+
+# Filter to only coordinates within 100 km
+peregrinefalcon_coordinates_within_100km <- peregrinefalcon_unique_coordinates[
+  peregrinefalcon_unique_coordinates$distance_from_san_diego_km <= 100,
+]
+
+# Sort from closest to farthest
+peregrinefalcon_coordinates_within_100km <- peregrinefalcon_coordinates_within_100km[
+  order(peregrinefalcon_coordinates_within_100km$distance_from_san_diego_km),
+]
+
+# View result
+print(peregrinefalcon_coordinates_within_100km)
+
+# Save as CSV
+write.csv(
+  peregrinefalcon_coordinates_within_100km,
+  "REAL_peregrinefalcon_coordinates_within_100km_of_san_diego.csv",
+  row.names = FALSE
+)
+```
+
+```{r rock pigeon}
+file_path <- "~/Downloads/C&SBIO_185_PROJECT/REAL_DATA_C&S_BIO_185_PROJECT/rockpigeon_smp_rel.txt"
+
+ebird_data_rockpigeon <- read_tsv(file_path, show_col_types = FALSE)
+
+
+rockpigeon_unique_coordinates <- ebird_data_rockpigeon %>%
+  filter(!is.na(LATITUDE), !is.na(LONGITUDE)) %>%
+  group_by(LATITUDE, LONGITUDE) %>%
+  summarise(
+    occurrence_count = n(),
+    locality = first(LOCALITY),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(occurrence_count), LATITUDE, LONGITUDE)
+
+
+print(rockpigeon_unique_coordinates)
+write_csv(rockpigeon_unique_coordinates, "REAL_rockpigeon_unique_coordinate_pairs_with_counts.csv")
+
+sd_lat <- 32.7157
+sd_lon <- -117.1611
+
+haversine_km <- function(lat1, lon1, lat2, lon2) {
+  R <- 6371 
+  
+  lat1 <- lat1 * pi / 180
+  lon1 <- lon1 * pi / 180
+  lat2 <- lat2 * pi / 180
+  lon2 <- lon2 * pi / 180
+  
+  dlat <- lat2 - lat1
+  dlon <- lon2 - lon1
+  
+  a <- sin(dlat / 2)^2 +
+    cos(lat1) * cos(lat2) * sin(dlon / 2)^2
+  
+  c <- 2 * atan2(sqrt(a), sqrt(1 - a))
+  
+  distance <- R * c
+  return(distance)
+}
+
+rockpigeon_unique_coordinates$distance_from_san_diego_km <- haversine_km(
+  sd_lat,
+  sd_lon,
+  rockpigeon_unique_coordinates$LATITUDE,
+  rockpigeon_unique_coordinates$LONGITUDE
+)
+
+# Filter to only coordinates within 100 km
+rockpigeon_coordinates_within_100km <- rockpigeon_unique_coordinates[
+  rockpigeon_unique_coordinates$distance_from_san_diego_km <= 100,
+]
+
+# Sort from closest to farthest
+rockpigeon_coordinates_within_100km <- rockpigeon_coordinates_within_100km[
+  order(rockpigeon_coordinates_within_100km$distance_from_san_diego_km),
+]
+
+# View result
+print(rockpigeon_coordinates_within_100km)
+
+# Save as CSV
+write.csv(
+  rockpigeon_coordinates_within_100km,
+  "REAL_rockpigeon_coordinates_within_100km_of_san_diego.csv",
+  row.names = FALSE
+)
+```
