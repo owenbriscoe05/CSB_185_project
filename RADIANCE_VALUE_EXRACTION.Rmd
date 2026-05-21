@@ -15,57 +15,83 @@ Develop CSV of species occurences per coordinate pair and corresponding radiance
 library(terra)
 library(tidyverse)
 
-# Load VIIRS TIFF
+# load VIIRS
 viirs <- rast("the_VIIRS_NA_75N_00N_180W_60W.tif")
-# Set extent and CRS for your VIIRS tile
+# set CRS for VIIRS
 ext(viirs) <- ext(-180, -60, 0, 75)
 crs(viirs) <- "EPSG:4326"
-
-# Function to extract VIIRS radiance for one species
-extract_viirs_for_species <- function(input_csv, output_csv) {
+extract_viirs_for_species <- function(input_csv, output_csv, species_name) {
   
-  # Read coordinate CSV and remove old radiance columns if present
+  #read coordinate CSV and previous radiance values if there already
   species_coords <- read_csv(input_csv, show_col_types = FALSE) %>%
-    select(-any_of(c("radiance", "viirs_radiance")))
+    select(-any_of(c("radiance", "viirs_radiance", "log_radiance")))
   
-  # Convert coordinates to spatial points
+  # convert coordinate to long/lat
   species_points <- vect(
     species_coords,
     geom = c("LONGITUDE", "LATITUDE"),
     crs = "EPSG:4326"
   )
   
-  # Extract radiance values from VIIRS raster
+  # extract  radiance
   extracted_values <- terra::extract(viirs, species_points)
   
-  # Add radiance column
+  # log transform radiance
   species_coords_with_radiance <- species_coords %>%
     mutate(
-      radiance = extracted_values[[2]]
+      radiance = extracted_values[[2]],
+      log_radiance = log(radiance + 1)
     )
+  
+ stats_data <- species_coords_with_radiance %>%
+    filter(!is.na(log_radiance), !is.na(occurrence_count))
+  
+  # Total number of occurrences
+  total_occurrences <- sum(stats_data$occurrence_count)
+  
+  # Weighted average log radiance
+  weighted_avg_log_radiance <- sum(
+    stats_data$log_radiance * stats_data$occurrence_count
+  ) / total_occurrences
+  
+  # Weighted standard deviation, treating occurrence_count as repeated observations
+  weighted_sd_log_radiance <- sqrt(
+    sum(
+      stats_data$occurrence_count *
+        (stats_data$log_radiance - weighted_avg_log_radiance)^2
+    ) / (total_occurrences - 1)
+  )
+  
+  # Standard error
+  standard_error_log_radiance <- weighted_sd_log_radiance / sqrt(total_occurrences)
+  
+  # Print results
+  cat("\n", species_name, "\n")
+  cat("Weighted average log(radiance + 1) aka UAI:", weighted_avg_log_radiance, "\n")
+  cat("Weighted SD of log(radiance + 1) aka UAI:", weighted_sd_log_radiance, "\n")
+  cat("Standard error:", standard_error_log_radiance, "\n")
+  cat("Total occurrences used:", total_occurrences, "\n\n")
   
   # Save output CSV
   write_csv(species_coords_with_radiance, output_csv)
   
-  # Return table so you can view it in R
   return(species_coords_with_radiance)
 }
 ```
 
-
 ```{r barnswallow_viirs}
 barnswallow_viirs <- extract_viirs_for_species(
   input_csv = "REAL_barnswallow_coordinates_within_100km_of_san_diego.csv",
-  output_csv = "REAL_barnswallow_coordinates_with_viirs_radiance.csv"
+  output_csv = "REAL_barnswallow_coordinates_with_viirs_log_radiance.csv",
+  species_name = "Barn Swallow"
 )
-
-print(barnswallow_viirs)
 ```
 
 ```{r california_quail_viirs}
 california_quail_viirs <- extract_viirs_for_species(
   input_csv = "~/Downloads/C&SBIO_185_PROJECT/REAL_california_quail_coordinates_within_100km_of_san_diego.csv",
-  output_csv = "REAL_california_quail_coordinates_with_viirs_radiance.csv"
+  output_csv = "REAL_california_quail_coordinates_with_viirs_radiance.csv",
+  species_name = "California Quail"
 )
 
 print(california_quail_viirs)
@@ -74,7 +100,8 @@ print(california_quail_viirs)
 ```{r house_sparrow_viirs}
 house_sparrow_viirs <- extract_viirs_for_species(
   input_csv = "~/Downloads/C&SBIO_185_PROJECT/REAL_housesparrow_coordinates_within_100km_of_san_diego.csv",
-  output_csv = "REAL_housesparrow_coordinates_with_viirs_radiance.csv"
+  output_csv = "REAL_housesparrow_coordinates_with_viirs_radiance.csv",
+  species_name = "House Swallow"
 )
 
 print(house_sparrow_viirs)
@@ -83,7 +110,8 @@ print(house_sparrow_viirs)
 ```{r peregrine_falcon_viirs}
 peregrine_falcon_viirs <- extract_viirs_for_species(
   input_csv = "~/Downloads/C&SBIO_185_PROJECT/REAL_peregrinefalcon_coordinates_within_100km_of_san_diego.csv",
-  output_csv = "REAL_peregrinefalcon_coordinates_with_viirs_radiance.csv"
+  output_csv = "REAL_peregrinefalcon_coordinates_with_viirs_radiance.csv",
+  species_name = "Peregrine Falcon"
 )
 
 print(peregrine_falcon_viirs)
@@ -92,7 +120,8 @@ print(peregrine_falcon_viirs)
 ```{r rock_pigeon_viirs}
 rock_pigeon_viirs <- extract_viirs_for_species(
   input_csv = "~/Downloads/C&SBIO_185_PROJECT/REAL_rockpigeon_coordinates_within_100km_of_san_diego.csv",
-  output_csv = "REAL_rock_pigeon_coordinates_with_viirs_radiance.csv"
+  output_csv = "REAL_rock_pigeon_coordinates_with_viirs_radiance.csv",
+  species_name = "Rock Pigeon"
 )
 
 print(rock_pigeon_viirs)

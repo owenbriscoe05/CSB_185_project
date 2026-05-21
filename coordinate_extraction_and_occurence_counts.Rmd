@@ -58,7 +58,7 @@ haversine_km <- function(lat1, lon1, lat2, lon2) {
   return(distance)
 }
 
-# Add distance from San Diego to each coordinate pair
+# add distance from San Diego to each coordinate pair
 barnswallow_unique_coordinates$distance_from_san_diego_km <- haversine_km(
   sd_lat,
   sd_lon,
@@ -66,20 +66,20 @@ barnswallow_unique_coordinates$distance_from_san_diego_km <- haversine_km(
   barnswallow_unique_coordinates$LONGITUDE
 )
 
-# Filter to only coordinates within 100 km
+# filter distance within 100km
 barnswallow_coordinates_within_100km <- barnswallow_unique_coordinates[
   barnswallow_unique_coordinates$distance_from_san_diego_km <= 100,
 ]
 
-# Sort from closest to farthest
+# sort closest to farthest
 barnswallow_coordinates_within_100km <- barnswallow_coordinates_within_100km[
   order(barnswallow_coordinates_within_100km$distance_from_san_diego_km),
 ]
 
-# View result
+# print
 print(barnswallow_coordinates_within_100km)
 
-# Save as CSV
+# save
 write.csv(
   barnswallow_coordinates_within_100km,
   "REAL_barnswallow_coordinates_within_100km_of_san_diego.csv",
